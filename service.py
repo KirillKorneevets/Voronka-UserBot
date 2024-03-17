@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 
 async def add_user(user_id: int, session: AsyncSession):
-    try:    
+    try:
         now = datetime.datetime.now()
         user = User(id=user_id, created_at=now, status=UserStatusEnum.ALIVE, status_updated_at=now)
         session.add(user)
@@ -18,15 +18,21 @@ async def add_user(user_id: int, session: AsyncSession):
 
 
 async def user_status_finished(user_id: int, session: AsyncSession):
-    now = datetime.datetime.now()
-    await session.execute(update(User).where(User.id == user_id).values(status=UserStatusEnum.FINISHED, status_updated_at=now))
-    await session.commit()
- 
+    try:
+        now = datetime.datetime.now()
+        await session.execute(update(User).where(User.id == user_id).values(status=UserStatusEnum.FINISHED, status_updated_at=now))
+        await session.commit()
+    except Exception as e:
+        print(f"Ошибка при обновлении статуса пользователя {user_id} на 'Завершено':", e)
 
-async def user_status_dead (user_id: int, session: AsyncSession):
-    now = datetime.datetime.now()
-    await session.execute(update(User).where(User.id == user_id).values(status=UserStatusEnum.DEAD, status_updated_at=now))
-    await session.commit()
+
+async def user_status_dead(user_id: int, session: AsyncSession):
+    try:
+        now = datetime.datetime.now()
+        await session.execute(update(User).where(User.id == user_id).values(status=UserStatusEnum.DEAD, status_updated_at=now))
+        await session.commit()
+    except Exception as e:
+        print(f"Ошибка при обновлении статуса пользователя {user_id} на 'Удален':", e)
 
 
 async def listen_for_message(message):
@@ -34,5 +40,4 @@ async def listen_for_message(message):
         text_message = message.text
         if text_message:
             return text_message
-
 
